@@ -14,17 +14,16 @@ func NewBookController(transaction *gorm.DB) BookController {
 type BookController baseController
 
 func (bc *BookController) Delete(bookModel *models.BookModel) error {
-
 	zap.S().Debugw("Executing BookController.Delete", "bookModel", bookModel.String())
 	if errSlice := bc.transaction.Delete(&bookModel).GetErrors(); len(errSlice) != 0 {
 		zap.S().Errorw("Generic error on controller", "errors", errSlice)
 		return ErrGeneric
 	}
+
 	return nil
 }
 
 func (bc *BookController) GetBook(bookKey string) (*models.BookModel, error) {
-
 	zap.S().Debugw("Executing BookController.GetBook", "bookKey", bookKey)
 	query := bc.transaction.Model(&models.BookModel{}).Preload("Status")
 	query = filter(query, "book_key", bookKey)
@@ -44,7 +43,6 @@ func (bc *BookController) GetBook(bookKey string) (*models.BookModel, error) {
 }
 
 func (bc *BookController) GetBooks(nameLike string, page, pageSize int) ([]*models.BookModel, int, error) {
-
 	zap.S().Debugw("Executing BookController.GetBooks", "nameLike", nameLike, "page", page, "pageSize", pageSize)
 	query := bc.transaction.Model(&models.BookModel{}).Preload("Status")
 
@@ -74,11 +72,13 @@ func (bc *BookController) filterNameLike(currentQuery *gorm.DB, name string) *go
 
 func (bc *BookController) Create(name, mask, status string) (*models.BookModel, error) {
 	zap.S().Debugw("Executing BookController.Create", "name", name, "mask", mask, "status", status)
+
 	bookKey, uuidErr := uuid.NewV4()
 	if uuidErr != nil {
 		zap.S().Errorw("Generic error on controller", "errors", uuidErr)
 		return nil, ErrGeneric
 	}
+
 	bookStatusController := NewBookStatusController(bc.transaction)
 	pendingStatus, _ := bookStatusController.GetStatus(status)
 	book := models.BookModel{
@@ -98,7 +98,7 @@ func (bc *BookController) Update(bookModel *models.BookModel, name, mask, status
 	zap.S().Debugw("Executing BookController.Update", "bookModel", bookModel, "name", name, "mask", mask, "status", status)
 	bookStatusController := NewBookStatusController(bc.transaction)
 	newStatus, _ := bookStatusController.GetStatus(status)
-	resultState := bc.transaction.Model(&bookModel).Updates(models.BookModel{Name: name, Mask: mask, Status: *newStatus, StatusId: newStatus.ID})
+	resultState := bc.transaction.Model(&bookModel).Updates(models.BookModel{Name: name, Mask: mask, Status: *newStatus, StatusID: newStatus.ID})
 	if errSlice := resultState.GetErrors(); len(errSlice) != 0 {
 		zap.S().Errorw("Generic error on controller", "errors", errSlice)
 		return ErrGeneric

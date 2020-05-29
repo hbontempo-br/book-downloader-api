@@ -4,6 +4,11 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"io"
+	"net/http"
+	"strconv"
+	"strings"
+
 	"github.com/gabriel-vasile/mimetype"
 	"github.com/gin-gonic/gin"
 	"github.com/hbontempo-br/book-downloader-api/api/DTOs"
@@ -12,10 +17,6 @@ import (
 	"github.com/hbontempo-br/book-downloader-api/utils"
 	"github.com/jinzhu/gorm"
 	"go.uber.org/zap"
-	"io"
-	"net/http"
-	"strconv"
-	"strings"
 )
 
 type CreateBookInput struct {
@@ -35,7 +36,6 @@ type BookResource struct {
 }
 
 func (br *BookResource) GetOne(c *gin.Context) {
-
 	tx := br.DB.BeginTx(c, nil)
 	defer tx.Rollback()
 
@@ -61,7 +61,6 @@ func (br *BookResource) GetOne(c *gin.Context) {
 }
 
 func (br *BookResource) DeleteOne(c *gin.Context) {
-
 	tx := br.DB.BeginTx(c, nil)
 	defer tx.Rollback()
 
@@ -93,12 +92,11 @@ func (br *BookResource) DeleteOne(c *gin.Context) {
 }
 
 func (br *BookResource) GetList(c *gin.Context) {
-
 	tx := br.DB.BeginTx(c, nil)
 	defer tx.Rollback()
 
 	// Load query string
-	bookQuery := GetBookQuery{Page: 1, PageSize: 10}
+	bookQuery := GetBookQuery{Page: 1, PageSize: 10} // TODO: remove this magic number, use environment variable
 	if err := c.ShouldBindQuery(&bookQuery); err != nil {
 		utils.DefaultErrorMessage(c, http.StatusBadRequest, err)
 		return
@@ -124,11 +122,10 @@ func (br *BookResource) GetList(c *gin.Context) {
 }
 
 func (br *BookResource) Create(c *gin.Context) {
-
 	tx := br.DB.BeginTx(c, nil)
 	defer tx.Rollback()
 
-	//Validate input
+	// Validate input
 	var input CreateBookInput
 	if err := c.ShouldBindJSON(&input); err != nil {
 		utils.DefaultErrorMessage(c, http.StatusBadRequest, err)
@@ -154,11 +151,9 @@ func (br *BookResource) Create(c *gin.Context) {
 
 	// Start download routine
 	go br.downloadRoutine(c.Copy(), book)
-
 }
 
 func (br *BookResource) Download(c *gin.Context) {
-
 	tx := br.DB.BeginTx(c, nil)
 	defer tx.Rollback()
 
@@ -216,7 +211,6 @@ func (br *BookResource) downloadRoutine(c context.Context, book *models.BookMode
 }
 
 func formatDownloadResponse(file io.Reader, filename string, c *gin.Context) error {
-
 	var buffer bytes.Buffer
 	contentLength, copyErr := io.Copy(&buffer, file)
 	if copyErr != nil {

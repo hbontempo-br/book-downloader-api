@@ -2,7 +2,14 @@ package main
 
 import (
 	"context"
+	"errors"
 	"fmt"
+	"net/http"
+	"os"
+	"os/signal"
+	"syscall"
+	"time"
+
 	"github.com/gin-contrib/cors"
 	"github.com/gin-contrib/gzip"
 	"github.com/gin-contrib/zap"
@@ -11,15 +18,9 @@ import (
 	"github.com/hbontempo-br/book-downloader-api/utils"
 	"github.com/jinzhu/gorm"
 	"go.uber.org/zap"
-	"net/http"
-	"os"
-	"os/signal"
-	"syscall"
-	"time"
 )
 
 func SetupRouter(db *gorm.DB, fileStorage utils.MinioFileStorage) *gin.Engine {
-
 	router := gin.New()
 
 	// Middleware
@@ -47,7 +48,6 @@ func SetupRouter(db *gorm.DB, fileStorage utils.MinioFileStorage) *gin.Engine {
 }
 
 func main() {
-
 	// Load env vars
 	EnvConfig := utils.LoadEnvVars()
 
@@ -57,10 +57,15 @@ func main() {
 		panic(ErrLog)
 	}
 	zap.ReplaceGlobals(logger)
-	defer logger.Sync()
+
+	defer func() {
+		if logger.Sync() != nil {
+			logger.Sugar().Errorw("Error trying to sync logger")
+		}
+	}()
 
 	// Setup DB
-	dbConfig := EnvConfig.DbConfig
+	dbConfig := EnvConfig.DBConfig
 	mySQLConnector := utils.NewMySQLConnector(dbConfig.Address, dbConfig.Port, dbConfig.DBName, dbConfig.User, dbConfig.Password)
 	db, errBb := mySQLConnector.Connect()
 	if errBb != nil {
@@ -84,20 +89,23 @@ func main() {
 
 	// Starting server
 	go func() {
-		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+		if err := srv.ListenAndServe(); err != nil && errors.Is(err, http.ErrServerClosed) {
 			zap.S().Fatalf("listen: %s\n", err)
 		}
 	}()
 
 	// Handle graceful shutdown
-	quit := make(chan os.Signal)
+	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
 	<-quit
 	zap.S().Info("Shutting down server...")
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second) // TODO: use it on async stuff
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+
 	defer cancel()
+
 	if err := srv.Shutdown(ctx); err != nil {
 		zap.S().Fatal("Server forced to shutdown:", err)
 	}
+
 	zap.S().Info("Server exiting")
 }

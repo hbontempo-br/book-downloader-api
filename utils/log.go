@@ -15,8 +15,8 @@ func (e LogErr) Error() string {
 
 // Based on https://stackoverflow.com/questions/57745017/zap-log-framework-go-initialize-log-once-and-reuse-from-other-go-file-solved
 func SetupLog(env string) (*zap.Logger, error) {
-
 	var config zap.Config
+
 	switch env {
 	case "dev":
 		config = zap.NewDevelopmentConfig()
@@ -24,8 +24,8 @@ func SetupLog(env string) (*zap.Logger, error) {
 		config = zap.NewProductionConfig()
 	default:
 		config = zap.NewDevelopmentConfig()
-
 	}
+
 	config.EncoderConfig.EncodeLevel = zapcore.CapitalColorLevelEncoder
 	config.EncoderConfig.TimeKey = "timestamp"
 	config.EncoderConfig.EncodeTime = zapcore.ISO8601TimeEncoder
@@ -33,8 +33,7 @@ func SetupLog(env string) (*zap.Logger, error) {
 	if err != nil {
 		return nil, ErrLogSetup
 	}
-	logger.Sugar()
+
 	logger.Debug("Log setup finished successfully")
 	return logger, nil
-
 }

@@ -14,8 +14,7 @@ type PaginatedResponse struct {
 	Pagination pagination  `json:"pagination"`
 }
 
-func formatPaginatedResponse(data []interface{}, pageSize int, page int, totalCount int) PaginatedResponse {
-
+func formatPaginatedResponse(data []interface{}, pageSize, page, totalCount int) PaginatedResponse {
 	maxPage := ((totalCount - 1) / pageSize) + 1
 	var nextPage *int
 	if maxPage > page {

@@ -1,8 +1,9 @@
 package cotrollers
 
 import (
-	"github.com/jinzhu/gorm"
 	"strings"
+
+	"github.com/jinzhu/gorm"
 )
 
 const (
@@ -25,18 +26,19 @@ func addWildcard(s string) string {
 		s = "%" + s
 	}
 	if !strings.HasSuffix(s, "%") {
-		s = s + "%"
+		s += "%"
 	}
+
 	return s
 }
 
-func filterLike(currentQuery *gorm.DB, column string, s string) *gorm.DB {
+func filterLike(currentQuery *gorm.DB, column, s string) *gorm.DB {
 	s = addWildcard(s)
 	newQuery := currentQuery.Where(column+" LIKE ?", s)
 	return newQuery
 }
 
-func paginatedQuery(currentQuery *gorm.DB, page int, pageSize int) *gorm.DB {
+func paginatedQuery(currentQuery *gorm.DB, page, pageSize int) *gorm.DB {
 	itemsPerPage := pageSize
 	offset := (page - 1) * pageSize
 	newQuery := currentQuery.Limit(itemsPerPage).Offset(offset)

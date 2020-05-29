@@ -2,14 +2,15 @@ package utils
 
 import (
 	"fmt"
+	"time"
+
 	"github.com/jinzhu/gorm"
-	_ "github.com/jinzhu/gorm/dialects/mysql"
+	_ "github.com/jinzhu/gorm/dialects/mysql" // mysql package required for gorm
 	"github.com/wantedly/gorm-zap"
 	"go.uber.org/zap"
-	"time"
 )
 
-func NewMySQLConnector(address string, port int, dbName string, user string, password string) MySQLConnector {
+func NewMySQLConnector(address string, port int, dbName, user, password string) MySQLConnector {
 	return MySQLConnector{address: address, port: port, dbName: dbName, user: user, password: password}
 }
 
@@ -32,11 +33,11 @@ func (msc *MySQLConnector) Connect() (*gorm.DB, error) {
 	}
 
 	// Config stuff
-	msc.db.LogMode(true)
+	msc.db.LogMode(true) // TODO: remove this magic number, use environment variable
 	msc.db.SetLogger(gormzap.New(zap.L()))
-	msc.db.DB().SetMaxIdleConns(10)
-	msc.db.DB().SetMaxOpenConns(100)
-	msc.db.DB().SetConnMaxLifetime(time.Hour)
+	msc.db.DB().SetMaxIdleConns(10)           // TODO: remove this magic number, use environment variable
+	msc.db.DB().SetMaxOpenConns(100)          // TODO: remove this magic number, use environment variable
+	msc.db.DB().SetConnMaxLifetime(time.Hour) // TODO: remove this magic number, use environment variable
 
 	return msc.db, nil
 }

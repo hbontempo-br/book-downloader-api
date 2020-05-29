@@ -13,7 +13,6 @@ func NewBookStatusController(transaction *gorm.DB) BookStatusController {
 type BookStatusController baseController
 
 func (s *BookStatusController) GetAllStatus() ([]*models.BookStatusModel, error) {
-
 	zap.S().Debug("Executing BookStatusController.GetAllStatus")
 	var status []*models.BookStatusModel
 	if errs := s.transaction.Find(&status).GetErrors(); len(errs) != 0 {
@@ -24,9 +23,10 @@ func (s *BookStatusController) GetAllStatus() ([]*models.BookStatusModel, error)
 }
 
 func (s *BookStatusController) GetStatus(enumerator string) (*models.BookStatusModel, error) {
-
 	zap.S().Debugw("Executing BookStatusController.GetStatus", "enumerator", enumerator)
+
 	var status models.BookStatusModel
+
 	query := s.transaction
 	query = filter(query, "enumerator", enumerator)
 	resultState := query.First(&status)

@@ -1,8 +1,9 @@
 package utils
 
 import (
-	"github.com/gin-gonic/gin"
 	"net/http"
+
+	"github.com/gin-gonic/gin"
 )
 
 func DefaultErrorMessage(c *gin.Context, httpStatus int, details interface{}) {

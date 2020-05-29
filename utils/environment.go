@@ -21,7 +21,7 @@ type MinioConfig struct {
 }
 
 type EnvVars struct {
-	DbConfig    DBConfig    `envvar:"DB_"`
+	DBConfig    DBConfig    `envvar:"DB_"`
 	MinioConfig MinioConfig `envvar:"MINIO_"`
 	ServerPort  int         `envvar:"SERVER_PORT" default:"3000"`
 	Environment string      `envvar:"ENVIRONMENT" default:"local"`
