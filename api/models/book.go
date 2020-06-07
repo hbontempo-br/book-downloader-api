@@ -8,12 +8,12 @@ import (
 )
 
 type BookModel struct {
-	ID        uint      `gorm:"primary_key"`
-	BookKey   uuid.UUID `gorm:"column:book_key;type:uuid;primary_key;"`
-	Name      string    `gorm:"column:name"`
-	Mask      string    `gorm:"column:mask"`
-	StatusID  uint      `gorm:"column:status_id"`
-	Status    BookStatusModel
+	ID        uint            `gorm:"primary_key"`
+	BookKey   uuid.UUID       `gorm:"column:book_key;type:uuid;primary_key;"`
+	Name      string          `gorm:"column:name"`
+	Mask      string          `gorm:"column:mask"`
+	StatusID  uint            `gorm:"column:status_id"`
+	Status    BookStatusModel `gorm:"association_autoupdate:false"`
 	CreatedAt *time.Time
 	DeletedAt *time.Time
 }

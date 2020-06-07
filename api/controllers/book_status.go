@@ -34,7 +34,7 @@ func (s *BookStatusController) GetStatus(enumerator string) (*models.BookStatusM
 		zap.S().Debugf("Record not found (enumerator=%v)", enumerator)
 		return nil, ErrNotFound
 	}
-	if errs := query.First(&status).GetErrors(); len(errs) != 0 {
+	if errs := resultState.GetErrors(); len(errs) != 0 {
 		zap.S().Errorw("Generic error on controller", "errors", errs)
 		return nil, ErrGeneric
 	}

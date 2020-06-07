@@ -97,7 +97,11 @@ func (bc *BookController) Create(name, mask, status string) (*models.BookModel, 
 func (bc *BookController) Update(bookModel *models.BookModel, name, mask, status string) error {
 	zap.S().Debugw("Executing BookController.Update", "bookModel", bookModel, "name", name, "mask", mask, "status", status)
 	bookStatusController := NewBookStatusController(bc.transaction)
-	newStatus, _ := bookStatusController.GetStatus(status)
+	newStatus, statusErr := bookStatusController.GetStatus(status)
+	if statusErr != nil {
+		zap.S().Errorw("Generic error on controller", "errors", statusErr)
+		return ErrGeneric
+	}
 	resultState := bc.transaction.Model(&bookModel).Updates(models.BookModel{Name: name, Mask: mask, Status: *newStatus, StatusID: newStatus.ID})
 	if errSlice := resultState.GetErrors(); len(errSlice) != 0 {
 		zap.S().Errorw("Generic error on controller", "errors", errSlice)
