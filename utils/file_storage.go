@@ -2,7 +2,10 @@ package utils
 
 import (
 	"bytes"
+	"fmt"
 	"io"
+	"net/url"
+	"time"
 
 	"github.com/gabriel-vasile/mimetype"
 	"github.com/minio/minio-go/v6"
@@ -13,6 +16,7 @@ const (
 	ErrClientCreation = FileStorageErr("error on file storage client creation")
 	ErrFileSave       = FileStorageErr("error on saving file to file storage")
 	ErrFileRetrieval  = FileStorageErr("error on retrieving file from file storage")
+	ErrFileLinkRetrieval = FileStorageErr("error on retrieving file link from file storage")
 )
 
 type FileStorageErr string
@@ -84,4 +88,16 @@ func (mfs *MinioFileStorage) Get(bucket, location string) (io.Reader, error) {
 		return nil, ErrFileRetrieval
 	}
 	return reader, nil
+}
+
+func (mfs *MinioFileStorage) GetLink(filename, bucket, location string, expiry time.Duration) (*url.URL, error) {
+	reqParams := make(url.Values)
+	reqParams.Set("response-content-disposition", fmt.Sprintf(`attachment; filename="%v"`, filename))
+	presignedURL, err := mfs.client.PresignedGetObject(bucket, location, expiry, reqParams)
+	if err != nil {
+		zap.S().Errorw("Generic error on MinioFileStorage.Get", "errors", err)
+		return nil, ErrFileLinkRetrieval
+	}
+
+	return presignedURL, nil
 }

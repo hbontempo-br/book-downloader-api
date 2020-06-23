@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/gabriel-vasile/mimetype"
 	"github.com/gin-gonic/gin"
@@ -28,6 +29,10 @@ type GetBookQuery struct {
 	Name     string `form:"name"`
 	Page     int    `form:"page"`
 	PageSize int    `form:"page_size"`
+}
+
+type GetBookLinkQuery struct {
+	Expiry int `form:"expiry" biding:"numeric,max=300"`
 }
 
 type BookResource struct {
@@ -132,7 +137,7 @@ func (br *BookResource) Create(c *gin.Context) {
 		return
 	}
 
-	// TODO: Add validations, specially regarding book`s mask (a regex or something)
+	// TODO: Add validations, specially regarding book`s mask (a regex or something) and file extension
 
 	bookController := controllers.NewBookController(tx)
 	book, err := bookController.Create(input.Name, input.Mask, "pending")
@@ -171,13 +176,50 @@ func (br *BookResource) Download(c *gin.Context) {
 		return
 	}
 
-	// check if status is valid
-	pdf, _ := br.FileStorage.Get("books", fmt.Sprintf("%v/%v", book.BookKey, book.Name))
+	// TODO: check if status is valid before trying to download
+	pdf, _ := br.FileStorage.Get("books", fmt.Sprintf("%v/%v", book.BookKey, book.Name)) // TODO: check for error
 
 	if err := formatDownloadResponse(pdf, book.Name, c); err != nil {
 		utils.DefaultErrorMessage(c, http.StatusInternalServerError, nil)
 		return
 	}
+}
+
+func (br *BookResource) DownloadLink(c *gin.Context) {
+	tx := br.DB.BeginTx(c, nil)
+	defer tx.Rollback()
+
+	// Retrieve book_key from request
+	bookKey := c.Param("book_key")
+
+	// Load query string
+	bookLinkQuery := GetBookLinkQuery{Expiry: 60} // TODO: remove this magic number, use environment variable
+	if err := c.ShouldBindQuery(&bookLinkQuery); err != nil {
+		utils.DefaultErrorMessage(c, http.StatusBadRequest, err)
+		return
+	}
+	expiryDuration := time.Duration(bookLinkQuery.Expiry) * time.Second
+
+	// Search books
+	bookController := controllers.NewBookController(tx)
+	book, err := bookController.GetBook(bookKey)
+	if err == controllers.ErrNotFound {
+		utils.DefaultErrorMessage(c, http.StatusBadRequest, "Can't download a non-existent book")
+		return
+	} else if err != nil {
+		utils.DefaultErrorMessage(c, http.StatusInternalServerError, nil)
+		return
+	}
+
+	bookLink, _ := br.FileStorage.GetLink(book.Name, "books", fmt.Sprintf("%v/%v", book.BookKey, book.Name),expiryDuration)
+	// TODO: check if status is valid before trying to download
+
+	// Format response
+	response := DTOs.NewBookLinkDTO(*bookLink)
+
+	// Success response
+	c.JSON(http.StatusOK, response)
+
 }
 
 func (br *BookResource) downloadRoutine(c context.Context, book *models.BookModel) {

@@ -39,6 +39,7 @@ func SetupRouter(db *gorm.DB, fileStorage utils.MinioFileStorage) *gin.Engine {
 	router.GET("/book/:book_key", bookResource.GetOne)
 	router.DELETE("book/:book_key", bookResource.DeleteOne)
 	router.GET("book/:book_key/download", bookResource.Download)
+	router.GET("book/:book_key/download_link", bookResource.DownloadLink)
 	router.POST("/book", bookResource.Create)
 
 	bookStatusResource := resources.BookStatusResource{DB: db}
