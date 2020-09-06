@@ -45,7 +45,7 @@ type MinioFileStorage struct {
 }
 
 func (mfs *MinioFileStorage) createClient() error {
-	client, err := minio.New(mfs.endpoint, mfs.accessKey, mfs.secretKey, mfs.ssl)
+	client, err := minio.NewV4(mfs.endpoint, mfs.accessKey, mfs.secretKey, mfs.ssl)
 	if err != nil {
 		zap.S().Errorw("Generic error on MinioFileStorage.createClient", "errors", err)
 		return ErrClientCreation

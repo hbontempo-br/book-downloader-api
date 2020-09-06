@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/hbontempo-br/book-downloader-api/config"
 	"net/http"
 	"os"
 	"os/signal"
@@ -50,10 +51,10 @@ func SetupRouter(db *gorm.DB, fileStorage utils.MinioFileStorage) *gin.Engine {
 
 func main() {
 	// Load env vars
-	EnvConfig := utils.LoadEnvVars()
+	envVars, _ := config.LoadEnvVars() // TODO: Handle error
 
 	// Setup logger
-	logger, ErrLog := utils.SetupLog(EnvConfig.Environment)
+	logger, ErrLog := utils.SetupLog(envVars.Environment)
 	if ErrLog != nil {
 		panic(ErrLog)
 	}
@@ -66,7 +67,7 @@ func main() {
 	}()
 
 	// Setup DB
-	dbConfig := EnvConfig.DBConfig
+	dbConfig := envVars.DBConfig
 	mySQLConnector := utils.NewMySQLConnector(dbConfig.Address, dbConfig.Port, dbConfig.DBName, dbConfig.User, dbConfig.Password)
 	db, errBb := mySQLConnector.Connect()
 	if errBb != nil {
@@ -74,7 +75,7 @@ func main() {
 	}
 
 	// Setup file storage
-	minioConfig := EnvConfig.MinioConfig
+	minioConfig := envVars.MinioConfig
 	fileStorage, errFs := utils.NewMinioFileStorage(minioConfig.Endpoint, minioConfig.AccessKey, minioConfig.SecretKey, minioConfig.SSL)
 	if errFs != nil {
 		panic(errBb)
@@ -82,7 +83,7 @@ func main() {
 
 	// Server setup
 	router := SetupRouter(db, fileStorage)
-	port := fmt.Sprintf(":%v", EnvConfig.ServerPort)
+	port := fmt.Sprintf(":%v", envVars.ServerPort)
 	srv := &http.Server{
 		Addr:    port,
 		Handler: router,

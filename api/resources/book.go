@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"github.com/hbontempo-br/book-downloader-api/config"
 	"io"
 	"net/http"
 	"strconv"
@@ -40,6 +41,7 @@ type BookResource struct {
 	FileStorage utils.MinioFileStorage
 }
 
+
 func (br *BookResource) GetOne(c *gin.Context) {
 	tx := br.DB.BeginTx(c, nil)
 	defer tx.Rollback()
@@ -62,7 +64,7 @@ func (br *BookResource) GetOne(c *gin.Context) {
 	response := DTOs.NewBookDTO(*book)
 
 	// Success response
-	c.JSON(http.StatusOK, response)
+	c.PureJSON(http.StatusOK, response)
 }
 
 func (br *BookResource) DeleteOne(c *gin.Context) {
@@ -93,7 +95,7 @@ func (br *BookResource) DeleteOne(c *gin.Context) {
 	tx.Commit()
 
 	// Success response
-	c.JSON(http.StatusNoContent, nil)
+	c.PureJSON(http.StatusNoContent, nil)
 }
 
 func (br *BookResource) GetList(c *gin.Context) {
@@ -123,7 +125,7 @@ func (br *BookResource) GetList(c *gin.Context) {
 	response := formatPaginatedResponse(data, bookQuery.PageSize, bookQuery.Page, totalCount)
 
 	// Success response
-	c.JSON(http.StatusOK, response)
+	c.PureJSON(http.StatusOK, response)
 }
 
 func (br *BookResource) Create(c *gin.Context) {
@@ -152,7 +154,7 @@ func (br *BookResource) Create(c *gin.Context) {
 	tx.Commit()
 
 	// Success response
-	c.JSON(http.StatusAccepted, response)
+	c.PureJSON(http.StatusAccepted, response)
 
 	// Start download routine
 	go br.downloadRoutine(c.Copy(), book)
@@ -177,7 +179,14 @@ func (br *BookResource) Download(c *gin.Context) {
 	}
 
 	// TODO: check if status is valid before trying to download
-	pdf, _ := br.FileStorage.Get("books", fmt.Sprintf("%v/%v", book.BookKey, book.Name)) // TODO: check for error
+
+	var bucketConfig config.BucketConfig
+	if env, err := config.LoadEnvVars(); err != nil {
+		// TODO: handle error
+	} else {
+		bucketConfig = env.BucketConfig
+	}
+	pdf, _ := br.FileStorage.Get(bucketConfig.Name, fmt.Sprintf("%v/%v", book.BookKey, book.Name)) // TODO: check for error
 
 	if err := formatDownloadResponse(pdf, book.Name, c); err != nil {
 		utils.DefaultErrorMessage(c, http.StatusInternalServerError, nil)
@@ -193,7 +202,7 @@ func (br *BookResource) DownloadLink(c *gin.Context) {
 	bookKey := c.Param("book_key")
 
 	// Load query string
-	bookLinkQuery := GetBookLinkQuery{Expiry: 60} // TODO: remove this magic number, use environment variable
+	bookLinkQuery := GetBookLinkQuery{Expiry: 600} // TODO: remove this magic number, use environment variable
 	if err := c.ShouldBindQuery(&bookLinkQuery); err != nil {
 		utils.DefaultErrorMessage(c, http.StatusBadRequest, err)
 		return
@@ -211,14 +220,20 @@ func (br *BookResource) DownloadLink(c *gin.Context) {
 		return
 	}
 
-	bookLink, _ := br.FileStorage.GetLink(book.Name, "books", fmt.Sprintf("%v/%v", book.BookKey, book.Name),expiryDuration)
+	var bucketConfig config.BucketConfig
+	if env, err := config.LoadEnvVars(); err != nil {
+		// TODO: handle error
+	} else {
+		bucketConfig = env.BucketConfig
+	}
+	bookLink, _ := br.FileStorage.GetLink(book.Name, bucketConfig.Name, fmt.Sprintf("%v/%v", book.BookKey, book.Name),expiryDuration)
 	// TODO: check if status is valid before trying to download
 
 	// Format response
 	response := DTOs.NewBookLinkDTO(*bookLink)
 
 	// Success response
-	c.JSON(http.StatusOK, response)
+	c.PureJSON(http.StatusOK, response)
 
 }
 
@@ -238,7 +253,13 @@ func (br *BookResource) downloadRoutine(c context.Context, book *models.BookMode
 		return
 	}
 
-	if err := br.FileStorage.Save(pdf, "books", fmt.Sprintf("%v/%v", book.BookKey, book.Name)); err != nil {
+	var bucketConfig config.BucketConfig
+	if env, err := config.LoadEnvVars(); err != nil {
+		// TODO: handle error
+	} else {
+		bucketConfig = env.BucketConfig
+	}
+	if err := br.FileStorage.Save(pdf, bucketConfig.Name, fmt.Sprintf("%v/%v", book.BookKey, book.Name)); err != nil {
 		zap.S().Errorw("Unable to save book to file storage", "errors", err)
 		return
 	}
