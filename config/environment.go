@@ -29,7 +29,7 @@ type EnvVars struct {
 	DBConfig     DBConfig     `envvar:"DB_"`
 	MinioConfig  MinioConfig  `envvar:"MINIO_"`
 	BucketConfig BucketConfig `envvar:"BUCKET_"`
-	ServerPort   int          `envvar:"SERVER_PORT" default:"3000"`
+	ServerPort   int          `envvar:"PORT" default:"3000"`
 	Environment  string       `envvar:"ENVIRONMENT" default:"local"`
 }
 
