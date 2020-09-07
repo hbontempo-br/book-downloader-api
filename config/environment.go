@@ -22,7 +22,7 @@ type MinioConfig struct {
 
 type BucketConfig struct {
 	Name                    string `envvar:"NAME"`
-	DefaultDownloadLinkTime int    `envvar:"DEFAULT_DOWNLOAD_LINK_TIME"`
+	DefaultDownloadLinkTime int    `envvar:"DEFAULT_DOWNLOAD_LINK_TIME" default:"60"`
 }
 
 type EnvVars struct {
@@ -36,6 +36,8 @@ type EnvVars struct {
 var envConfig *EnvVars
 
 func LoadEnvVars() (*EnvVars, error) {
+
+	// TODO: Add custom errors to package
 	if envConfig != nil {
 		zap.S().Debug("Environments variables already loaded, reaching value on memory")
 		return envConfig, nil
@@ -43,7 +45,7 @@ func LoadEnvVars() (*EnvVars, error) {
 	var newEnvConfig EnvVars
 	err := envvar.Parse(&newEnvConfig)
 	if err != nil {
-		zap.S().Fatalf("Unable to load environments variables correctly [%v]\n", err)
+		zap.S().Debug("Unable to load environments variables correctly", err)
 		return nil, err
 	}
 	envConfig = &newEnvConfig
