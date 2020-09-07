@@ -5,7 +5,7 @@ import (
 )
 
 type BookLinkDTO struct {
-	DownloadLink string        `json:"download_link"`
+	DownloadLink string `json:"download_link"`
 }
 
 func NewBookLinkDTO(link url.URL) BookLinkDTO {

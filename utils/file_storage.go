@@ -13,9 +13,9 @@ import (
 )
 
 const (
-	ErrClientCreation = FileStorageErr("error on file storage client creation")
-	ErrFileSave       = FileStorageErr("error on saving file to file storage")
-	ErrFileRetrieval  = FileStorageErr("error on retrieving file from file storage")
+	ErrClientCreation    = FileStorageErr("error on file storage client creation")
+	ErrFileSave          = FileStorageErr("error on saving file to file storage")
+	ErrFileRetrieval     = FileStorageErr("error on retrieving file from file storage")
 	ErrFileLinkRetrieval = FileStorageErr("error on retrieving file link from file storage")
 )
 

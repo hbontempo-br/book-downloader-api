@@ -41,7 +41,6 @@ type BookResource struct {
 	FileStorage utils.MinioFileStorage
 }
 
-
 func (br *BookResource) GetOne(c *gin.Context) {
 	tx := br.DB.BeginTx(c, nil)
 	defer tx.Rollback()
@@ -226,7 +225,7 @@ func (br *BookResource) DownloadLink(c *gin.Context) {
 	} else {
 		bucketConfig = env.BucketConfig
 	}
-	bookLink, _ := br.FileStorage.GetLink(book.Name, bucketConfig.Name, fmt.Sprintf("%v/%v", book.BookKey, book.Name),expiryDuration)
+	bookLink, _ := br.FileStorage.GetLink(book.Name, bucketConfig.Name, fmt.Sprintf("%v/%v", book.BookKey, book.Name), expiryDuration)
 	// TODO: check if status is valid before trying to download
 
 	// Format response
