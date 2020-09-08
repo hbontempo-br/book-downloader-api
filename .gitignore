@@ -17,3 +17,5 @@
 # Local development stuff
 local.env
 .idea
+
+coverage.txt

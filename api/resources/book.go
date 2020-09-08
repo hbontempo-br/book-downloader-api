@@ -121,7 +121,7 @@ func (br *BookResource) GetList(c *gin.Context) {
 	for _, book := range books {
 		data = append(data, DTOs.NewBookDTO(*book))
 	}
-	response := formatPaginatedResponse(data, bookQuery.PageSize, bookQuery.Page, totalCount)
+	response, _ := utils.FormatPaginatedResponse(data, bookQuery.PageSize, bookQuery.Page, totalCount) // TODO: handle error
 
 	// Success response
 	c.PureJSON(http.StatusOK, response)

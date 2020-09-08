@@ -11,6 +11,6 @@ type BookDTO struct {
 	Status  BookStatusDTO `json:"status"`
 }
 
-func NewBookDTO(model models.BookModel) interface{} {
+func NewBookDTO(model models.BookModel) BookDTO {
 	return BookDTO{BookKey: model.BookKey.String(), Name: model.Name, Mask: model.Mask, Status: NewBookStatusDTO(model.Status)}
 }
