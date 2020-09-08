@@ -25,12 +25,12 @@ func TestBook_String(t *testing.T) {
 		}
 		testTime := time.Now()
 		bookModel := BookModel{
-			ID: 1,
-			BookKey: testUUID,
-			Name: "name",
-			Mask: "mask",
-			StatusID: 1,
-			Status: BookStatusModel{1, "status"},
+			ID:        1,
+			BookKey:   testUUID,
+			Name:      "name",
+			Mask:      "mask",
+			StatusID:  1,
+			Status:    BookStatusModel{1, "status"},
 			CreatedAt: &testTime,
 			DeletedAt: &testTime,
 		}

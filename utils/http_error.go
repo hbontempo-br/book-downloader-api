@@ -6,7 +6,7 @@ import (
 
 const (
 	InvalidHTTPStatus = ErrorMessageErr("invalid HTTP status")
-	ErrGeneric  = ErrorMessageErr("generic error")
+	ErrGeneric        = ErrorMessageErr("generic error")
 )
 
 type ErrorMessageErr string
