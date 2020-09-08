@@ -16,5 +16,6 @@ require (
 	github.com/stretchr/testify v1.4.0
 	github.com/wantedly/gorm-zap v0.0.0-20171015071652-372d3517a876
 	go.uber.org/zap v1.15.0
+	golang.org/x/tools v0.0.0-20200428185508-e9a00ec82136
 	mvdan.cc/gofumpt v0.0.0-20200513141252-abc0db2c416a // indirect
 )

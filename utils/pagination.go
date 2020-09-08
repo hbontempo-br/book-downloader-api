@@ -1,6 +1,19 @@
 package utils
 
-type pagination struct {
+const (
+	InvalidPageError          = PaginationError("invalid page number, page number can not be negative")
+	InvalidPageSizeError      = PaginationError("invalid page size, page size can not be negative")
+	InvalidTotalCountError    = PaginationError("invalid total count, total count can not be negative")
+	PageSizeDataMismatchError = PaginationError("informed page size smaller than the data provided")
+)
+
+type PaginationError string
+
+func (e PaginationError) Error() string {
+	return string(e)
+}
+
+type Pagination struct {
 	CurrentPage  int  `json:"current_page"`
 	NextPage     *int `json:"next_page"`
 	PreviousPage *int `json:"previous_page"`
@@ -11,10 +24,22 @@ type pagination struct {
 
 type PaginatedResponse struct {
 	Data       interface{} `json:"data"`
-	Pagination pagination  `json:"pagination"`
+	Pagination Pagination  `json:"Pagination"`
 }
 
-func FormatPaginatedResponse(data []interface{}, pageSize, page, totalCount int) PaginatedResponse {
+func FormatPaginatedResponse(data []interface{}, pageSize, page, totalCount int) (*PaginatedResponse, error) {
+	if page < 1 {
+		return nil, InvalidPageError
+	}
+	if pageSize < 1 {
+		return nil, InvalidPageSizeError
+	}
+	if totalCount < 0 {
+		return nil, InvalidTotalCountError
+	}
+	if pageSize < len(data) {
+		return nil, PageSizeDataMismatchError
+	}
 	maxPage := ((totalCount - 1) / pageSize) + 1
 	var nextPage *int
 	if maxPage > page {
@@ -26,7 +51,7 @@ func FormatPaginatedResponse(data []interface{}, pageSize, page, totalCount int)
 		pp := page - 1
 		prevPage = &pp
 	}
-	pag := pagination{CurrentPage: page, NextPage: nextPage, PreviousPage: prevPage, MaxPage: maxPage, RowsPerPage: pageSize, TotalRows: totalCount}
+	pag := Pagination{CurrentPage: page, NextPage: nextPage, PreviousPage: prevPage, MaxPage: maxPage, RowsPerPage: pageSize, TotalRows: totalCount}
 	resp := PaginatedResponse{Data: data, Pagination: pag}
-	return resp
+	return &resp, nil
 }
